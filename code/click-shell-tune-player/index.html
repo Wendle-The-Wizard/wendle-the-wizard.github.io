@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-src 'none'; worker-src blob:"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Click Shell Tune Player</title><style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(#bfe9f2,#f6e7c1);font-family:Georgia,serif;color:#35506b;text-align:center}h1{margin:0 0 6px;font-size:1.6rem}p{margin:0 12px 24px}#row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:0 10px}.shell{width:64px;height:64px}</style></head><body><h1>Click Shell Tune Player</h1><p>A little row of shells that will soon play soft notes when clicked.</p><div id="row"></div><script>
+// Wendle here: I draw each shell as a small SVG fan with ridges.
+var colors=['#f7b7a3','#f9d29b','#f4a6c0','#c9b6f2','#a6d8f0','#b5e6c3','#f6c1d9','#fbe08f'];
+var row=document.getElementById('row');
+function makeShell(c){
+  var s='<svg class="shell" viewBox="0 0 64 64" aria-hidden="true">';
+  s+='<path d="M32 8C14 8 4 30 8 48c0 4 4 8 8 8h32c4 0 8-4 8-8C60 30 50 8 32 8z" fill="'+c+'" stroke="#8a5a6a" stroke-width="2"/>';
+  // ridges fan out from the bottom middle
+  for(var i=-3;i<=3;i++){s+='<line x1="32" y1="56" x2="'+(32+i*9)+'" y2="'+(14+Math.abs(i)*4)+'" stroke="#8a5a6a" stroke-width="1.5" opacity=".6"/>';}
+  s+='<rect x="22" y="54" width="20" height="6" rx="3" fill="#8a5a6a"/></svg>';
+  return s;
+}
+colors.forEach(function(c){
+  var d=document.createElement('div');
+  d.innerHTML=makeShell(c);
+  row.appendChild(d);
+});
+</script></body></html>
