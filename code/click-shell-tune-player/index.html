@@ -1,7 +1,7 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-src 'none'; worker-src blob:"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Click Shell Tune Player</title><style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(#bfe9f2,#f6e7c1);font-family:Georgia,serif;color:#35506b;text-align:center}h1{margin:0 0 6px;font-size:1.6rem}p{margin:0 12px 24px}#row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:0 10px}.shell{width:64px;height:64px;display:block}button.slot{background:none;border:0;padding:4px;cursor:pointer;border-radius:16px;-webkit-tap-highlight-color:transparent;transition:transform .15s ease}button.slot:hover{transform:translateY(-3px)}button.slot:focus-visible{outline:3px solid #35506b}button.slot.pop{animation:pop .3s ease}@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(-6deg)}100%{transform:scale(1)}}#count{margin-top:18px;min-height:1.2em;font-size:1rem}</style></head><body><h1>Click Shell Tune Player</h1><p>A little row of shells that each play their own soft note when clicked.</p><div id="row"></div><div id="count" aria-live="polite">Click a shell!</div><script>
-// Wendle here: I draw each shell as a small SVG fan with ridges.
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-src 'none'; worker-src blob:"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Click Shell Tune Player</title><style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(#bfe9f2,#f6e7c1);font-family:Georgia,serif;color:#35506b;text-align:center}h1{margin:0 0 6px;font-size:1.6rem}p{margin:0 12px 24px}#row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:0 10px}.shell{width:64px;height:64px;display:block;overflow:visible}button.slot{background:none;border:0;padding:4px;cursor:pointer;border-radius:16px;-webkit-tap-highlight-color:transparent;transition:transform .15s ease}button.slot:hover{transform:translateY(-3px)}button.slot:focus-visible{outline:3px solid #35506b}button.slot.pop{animation:wobble .8s ease-out}button.slot.pop .shell{animation:glow .8s ease-out}@keyframes wobble{0%{transform:scale(1) rotate(0)}15%{transform:scale(1.2) rotate(-10deg)}35%{transform:scale(1.15) rotate(8deg)}55%{transform:scale(1.08) rotate(-5deg)}75%{transform:scale(1.03) rotate(2deg)}100%{transform:scale(1) rotate(0)}}@keyframes glow{0%{filter:drop-shadow(0 0 0 rgba(255,244,170,0))}20%{filter:drop-shadow(0 0 12px rgba(255,236,140,1)) drop-shadow(0 0 22px rgba(255,255,255,.8))}100%{filter:drop-shadow(0 0 0 rgba(255,244,170,0))}}@media (prefers-reduced-motion:reduce){button.slot.pop{animation:none}}#count{margin-top:18px;min-height:1.2em;font-size:1rem}</style></head><body><h1>Click Shell Tune Player</h1><p>A little row of shells that each play their own soft note when clicked.</p><div id="row"></div><div id="count" aria-live="polite">Click a shell!</div><script>
+// Wendle here: each shell is a small SVG fan with ridges.
 var colors=['#f7b7a3','#f9d29b','#f4a6c0','#c9b6f2','#a6d8f0','#b5e6c3','#f6c1d9','#fbe08f'];
-// Step 3: a C major scale, one note per shell (frequencies in Hz)
+// A C major scale, one note per shell (Hz)
 var notes=[['C',261.63],['D',293.66],['E',329.63],['F',349.23],['G',392.00],['A',440.00],['B',493.88],['C',523.25]];
 var row=document.getElementById('row');
 var countEl=document.getElementById('count');
@@ -28,7 +28,6 @@ function playNote(freq){
 function makeShell(c){
   var s='<svg class="shell" viewBox="0 0 64 64" aria-hidden="true">';
   s+='<path d="M32 8C14 8 4 30 8 48c0 4 4 8 8 8h32c4 0 8-4 8-8C60 30 50 8 32 8z" fill="'+c+'" stroke="#8a5a6a" stroke-width="2"/>';
-  // ridges fan out from the bottom middle
   for(var i=-3;i<=3;i++){s+='<line x1="32" y1="56" x2="'+(32+i*9)+'" y2="'+(14+Math.abs(i)*4)+'" stroke="#8a5a6a" stroke-width="1.5" opacity=".6"/>';}
   s+='<rect x="22" y="54" width="20" height="6" rx="3" fill="#8a5a6a"/></svg>';
   return s;
@@ -40,6 +39,7 @@ colors.forEach(function(c,n){
   b.setAttribute('aria-label','Shell '+(n+1)+', note '+notes[n][0]);
   b.innerHTML=makeShell(c);
   b.addEventListener('click',function(){
+    // restart the glow and wobble even if clicked quickly again
     b.classList.remove('pop');
     void b.offsetWidth;
     b.classList.add('pop');
@@ -47,7 +47,7 @@ colors.forEach(function(c,n){
     clicks++;
     countEl.textContent='Shell '+(n+1)+' sings '+notes[n][0]+' ('+clicks+' click'+(clicks===1?'':'s')+' so far)';
   });
-  b.addEventListener('animationend',function(){b.classList.remove('pop');});
+  b.addEventListener('animationend',function(e){if(e.target===b)b.classList.remove('pop');});
   row.appendChild(b);
 });
 </script></body></html>
