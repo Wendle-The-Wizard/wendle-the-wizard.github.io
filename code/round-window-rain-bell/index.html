@@ -1,5 +1,5 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-src 'none'; worker-src blob:"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Round Window Rain Bell</title><style>html,body{margin:0;height:100%;background:#1b1a2e;color:#d9d4f0;font-family:Georgia,serif;text-align:center}body{display:flex;flex-direction:column;align-items:center;justify-content:center}h1{font-size:1.4rem;margin:.4rem}p{margin:.2rem .8rem .8rem;font-size:.95rem}canvas{width:min(86vw,70vh);height:min(86vw,70vh);display:block}</style></head><body><h1>Round Window Rain Bell</h1><p>A little round window on a rainy night, where raindrops trickle down the glass and will soon ring a bell.</p><canvas id="c" width="600" height="600"></canvas><script>
-// Wendle's round window, step 2: raindrops trickle down the glass.
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-src 'none'; worker-src blob:"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Round Window Rain Bell</title><style>html,body{margin:0;height:100%;background:#1b1a2e;color:#d9d4f0;font-family:Georgia,serif;text-align:center}body{display:flex;flex-direction:column;align-items:center;justify-content:center}h1{font-size:1.4rem;margin:.4rem}p{margin:.2rem .8rem .8rem;font-size:.95rem}canvas{width:min(86vw,70vh);height:min(86vw,70vh);display:block}</style></head><body><h1>Round Window Rain Bell</h1><p>A little round window on a rainy night, where raindrops trickle down the glass toward a small bell waiting at the bottom.</p><canvas id="c" width="600" height="600"></canvas><script>
+// Wendle's round window, step 3: a small bell sits at the bottom of the glass.
 const c=document.getElementById('c'),g=c.getContext('2d');
 const W=600,cx=300,cy=300,R=230;
 
@@ -37,6 +37,34 @@ f.beginPath();f.arc(cx,cy,R,0,7);f.stroke();
 f.lineWidth=12;f.strokeStyle='#6b4a2f';
 f.beginPath();f.moveTo(cx,cy-R);f.lineTo(cx,cy+R);f.moveTo(cx-R,cy);f.lineTo(cx+R,cy);f.stroke();
 
+// the bell: a little brass bell sitting on the bottom of the sill, drawn once
+const BX=cx+55,BY=cy+R-6; // BY is where the bell's rim sits (bottom of glass)
+const bell=document.createElement('canvas');bell.width=bell.height=W;
+const e=bell.getContext('2d');
+// a tiny hook so it looks hung up
+e.strokeStyle='#8a6a1f';e.lineWidth=3;
+e.beginPath();e.arc(BX,BY-48,5,0,7);e.stroke();
+// the bell body
+const bodyG=e.createLinearGradient(BX-22,0,BX+22,0);
+bodyG.addColorStop(0,'#a9791f');bodyG.addColorStop(.4,'#f4d36b');bodyG.addColorStop(1,'#8a5f14');
+e.fillStyle=bodyG;
+e.beginPath();
+e.moveTo(BX-6,BY-44);
+e.quadraticCurveTo(BX-22,BY-38,BX-20,BY-14);
+e.quadraticCurveTo(BX-20,BY-8,BX-28,BY-3);
+e.lineTo(BX-28,BY);
+e.lineTo(BX+28,BY);
+e.lineTo(BX+28,BY-3);
+e.quadraticCurveTo(BX+20,BY-8,BX+20,BY-14);
+e.quadraticCurveTo(BX+22,BY-38,BX+6,BY-44);
+e.closePath();e.fill();
+e.strokeStyle='#5a3d0c';e.lineWidth=1.5;e.stroke();
+// shine
+e.strokeStyle='rgba(255,255,255,.55)';e.lineWidth=2.5;e.lineCap='round';
+e.beginPath();e.moveTo(BX-10,BY-34);e.quadraticCurveTo(BX-14,BY-22,BX-13,BY-14);e.stroke();
+// the clapper peeking out below the rim
+e.fillStyle='#5a3d0c';e.beginPath();e.arc(BX,BY+1,5,0,7);e.fill();
+
 // raindrops: each one wobbles slowly down, leaving a thin wet trail
 const drops=[];
 function newDrop(top){
@@ -73,6 +101,9 @@ function frame(t){
     if(Math.hypot(d.x-cx,d.y-cy)>R-2&&d.y>cy){drops.splice(i,1);newDrop(true)}
   }
   g.restore();
+  // the bell is drawn inside the glass edge, then the frame covers its base
+  g.save();g.beginPath();g.arc(cx,cy,R+2,0,7);g.clip();
+  g.drawImage(bell,0,0);g.restore();
   g.drawImage(fr,0,0);
   requestAnimationFrame(frame);
 }
