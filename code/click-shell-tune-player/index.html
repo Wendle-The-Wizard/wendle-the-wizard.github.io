@@ -1,12 +1,22 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-src 'none'; worker-src blob:"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Click Shell Tune Player</title><style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(#bfe9f2,#f6e7c1);font-family:Georgia,serif;color:#35506b;text-align:center}h1{margin:0 0 6px;font-size:1.6rem}p{margin:0 12px 24px}#row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:0 10px}.shell{width:64px;height:64px;display:block;overflow:visible}button.slot{background:none;border:0;padding:4px;cursor:pointer;border-radius:16px;-webkit-tap-highlight-color:transparent;transition:transform .15s ease}button.slot:hover{transform:translateY(-3px)}button.slot:focus-visible{outline:3px solid #35506b}button.slot.pop{animation:wobble .8s ease-out}button.slot.pop .shell{animation:glow .8s ease-out}@keyframes wobble{0%{transform:scale(1) rotate(0)}15%{transform:scale(1.2) rotate(-10deg)}35%{transform:scale(1.15) rotate(8deg)}55%{transform:scale(1.08) rotate(-5deg)}75%{transform:scale(1.03) rotate(2deg)}100%{transform:scale(1) rotate(0)}}@keyframes glow{0%{filter:drop-shadow(0 0 0 rgba(255,244,170,0))}20%{filter:drop-shadow(0 0 12px rgba(255,236,140,1)) drop-shadow(0 0 22px rgba(255,255,255,.8))}100%{filter:drop-shadow(0 0 0 rgba(255,244,170,0))}}@media (prefers-reduced-motion:reduce){button.slot.pop{animation:none}}#count{margin-top:18px;min-height:1.2em;font-size:1rem}</style></head><body><h1>Click Shell Tune Player</h1><p>A little row of shells that each play their own soft note when clicked.</p><div id="row"></div><div id="count" aria-live="polite">Click a shell!</div><script>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-src 'none'; worker-src blob:"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Click Shell Tune Player</title><style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(#bfe9f2,#f6e7c1);font-family:Georgia,serif;color:#35506b;text-align:center}h1{margin:0 0 6px;font-size:1.6rem}p{margin:0 12px 24px}#row{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;padding:0 10px}.shell{width:64px;height:64px;display:block;overflow:visible}button.slot{background:none;border:0;padding:4px;cursor:pointer;border-radius:16px;-webkit-tap-highlight-color:transparent;transition:transform .15s ease}button.slot:hover{transform:translateY(-3px)}button.slot:focus-visible{outline:3px solid #35506b}button.slot.pop{animation:wobble .8s ease-out}button.slot.pop .shell{animation:glow .8s ease-out}@keyframes wobble{0%{transform:scale(1) rotate(0)}15%{transform:scale(1.2) rotate(-10deg)}35%{transform:scale(1.15) rotate(8deg)}55%{transform:scale(1.08) rotate(-5deg)}75%{transform:scale(1.03) rotate(2deg)}100%{transform:scale(1) rotate(0)}}@keyframes glow{0%{filter:drop-shadow(0 0 0 rgba(255,244,170,0))}20%{filter:drop-shadow(0 0 12px rgba(255,236,140,1)) drop-shadow(0 0 22px rgba(255,255,255,.8))}100%{filter:drop-shadow(0 0 0 rgba(255,244,170,0))}}@media (prefers-reduced-motion:reduce){button.slot.pop{animation:none}}#count{margin-top:18px;min-height:1.2em;font-size:1rem}#ctl{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}#ctl button{font:inherit;color:#35506b;background:#fff8e6;border:2px solid #35506b;border-radius:20px;padding:8px 16px;cursor:pointer}#ctl button:disabled{opacity:.45;cursor:default}#ctl button.on{background:#f4a6c0}#ctl button:focus-visible{outline:3px solid #35506b;outline-offset:2px}</style></head><body><h1>Click Shell Tune Player</h1><p>A little row of shells that each play their own soft note when clicked, and you can record a tune and play it back.</p><div id="row"></div><div id="ctl"><button type="button" id="rec">Record</button><button type="button" id="play" disabled>Play</button><button type="button" id="clear" disabled>Clear</button></div><div id="count" aria-live="polite">Click a shell!</div><script>
 // Wendle here: each shell is a small SVG fan with ridges.
 var colors=['#f7b7a3','#f9d29b','#f4a6c0','#c9b6f2','#a6d8f0','#b5e6c3','#f6c1d9','#fbe08f'];
 // A C major scale, one note per shell (Hz)
 var notes=[['C',261.63],['D',293.66],['E',329.63],['F',349.23],['G',392.00],['A',440.00],['B',493.88],['C',523.25]];
 var row=document.getElementById('row');
 var countEl=document.getElementById('count');
+var recBtn=document.getElementById('rec');
+var playBtn=document.getElementById('play');
+var clearBtn=document.getElementById('clear');
+var slots=[];
 var clicks=0;
 var ctx=null;
+// Recording state: a tune is a list of {n: shell index, t: ms since first click}
+var recording=false;
+var tune=[];
+var startTime=0;
+var playing=false;
+var timers=[];
 // The audio context is made on the first click, because browsers want a tap first.
 function playNote(freq){
   var AC=window.AudioContext||window.webkitAudioContext;
@@ -32,6 +42,23 @@ function makeShell(c){
   s+='<rect x="22" y="54" width="20" height="6" rx="3" fill="#8a5a6a"/></svg>';
   return s;
 }
+// Glow, wobble and sound for one shell (used by clicks and by playback)
+function sing(n){
+  var b=slots[n];
+  // restart the glow and wobble even if hit quickly again
+  b.classList.remove('pop');
+  void b.offsetWidth;
+  b.classList.add('pop');
+  playNote(notes[n][1]);
+}
+function refresh(){
+  recBtn.textContent=recording?'Stop recording':'Record';
+  recBtn.className=recording?'on':'';
+  recBtn.disabled=playing;
+  playBtn.textContent=playing?'Stop':'Play';
+  playBtn.disabled=recording||(!playing&&tune.length===0);
+  clearBtn.disabled=recording||playing||tune.length===0;
+}
 colors.forEach(function(c,n){
   var b=document.createElement('button');
   b.type='button';
@@ -39,15 +66,56 @@ colors.forEach(function(c,n){
   b.setAttribute('aria-label','Shell '+(n+1)+', note '+notes[n][0]);
   b.innerHTML=makeShell(c);
   b.addEventListener('click',function(){
-    // restart the glow and wobble even if clicked quickly again
-    b.classList.remove('pop');
-    void b.offsetWidth;
-    b.classList.add('pop');
-    playNote(notes[n][1]);
+    if(playing)return; // let the tune finish in peace
+    sing(n);
     clicks++;
-    countEl.textContent='Shell '+(n+1)+' sings '+notes[n][0]+' ('+clicks+' click'+(clicks===1?'':'s')+' so far)';
+    if(recording){
+      var now=Date.now();
+      if(tune.length===0)startTime=now;
+      tune.push({n:n,t:now-startTime});
+      countEl.textContent='Recording... '+tune.length+' note'+(tune.length===1?'':'s')+' so far';
+      refresh();
+    }else{
+      countEl.textContent='Shell '+(n+1)+' sings '+notes[n][0]+' ('+clicks+' click'+(clicks===1?'':'s')+' so far)';
+    }
   });
   b.addEventListener('animationend',function(e){if(e.target===b)b.classList.remove('pop');});
+  slots.push(b);
   row.appendChild(b);
 });
+recBtn.addEventListener('click',function(){
+  recording=!recording;
+  if(recording){
+    tune=[];
+    countEl.textContent='Recording! Click some shells to make a tune.';
+  }else{
+    countEl.textContent=tune.length?'Saved '+tune.length+' note'+(tune.length===1?'':'s')+'. Press Play!':'Nothing recorded yet.';
+  }
+  refresh();
+});
+function stopPlay(msg){
+  timers.forEach(clearTimeout);
+  timers=[];
+  playing=false;
+  if(msg)countEl.textContent=msg;
+  refresh();
+}
+playBtn.addEventListener('click',function(){
+  if(playing){stopPlay('Stopped.');return;}
+  if(!tune.length)return;
+  playing=true;
+  countEl.textContent='Playing your tune...';
+  tune.forEach(function(e){
+    timers.push(setTimeout(function(){sing(e.n);},e.t));
+  });
+  // finish a little after the last note
+  timers.push(setTimeout(function(){stopPlay('Done! Play it again or record a new one.');},tune[tune.length-1].t+1000));
+  refresh();
+});
+clearBtn.addEventListener('click',function(){
+  tune=[];
+  countEl.textContent='Tune cleared.';
+  refresh();
+});
+refresh();
 </script></body></html>
