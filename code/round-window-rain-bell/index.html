@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-src 'none'; worker-src blob:"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Round Window Rain Bell</title><style>html,body{margin:0;height:100%;background:#1b1a2e;color:#d9d4f0;font-family:Georgia,serif;text-align:center}body{display:flex;flex-direction:column;align-items:center;justify-content:center}h1{font-size:1.4rem;margin:.4rem}p{margin:.2rem .8rem .8rem;font-size:.95rem}canvas{width:min(86vw,70vh);height:min(86vw,70vh);display:block}</style></head><body><h1>Round Window Rain Bell</h1><p>A little round window on a rainy night, where raindrops will soon ring a bell.</p><canvas id="c" width="600" height="600"></canvas><script>
+// Wendle's round window, step 1: just the sky, the clouds and the frame.
+const c=document.getElementById('c'),g=c.getContext('2d');
+const W=600,cx=300,cy=300,R=230;
+
+// a few fixed clouds and rain streaks so the sky looks the same each time
+const clouds=[[200,170,70],[320,150,85],[420,190,65],[260,210,80],[370,225,70]];
+let seed=7;function rnd(){seed=(seed*16807)%2147483647;return seed/2147483647}
+const streaks=[];for(let i=0;i<70;i++)streaks.push([rnd()*W,rnd()*W,10+rnd()*14]);
+
+g.fillStyle='#1b1a2e';g.fillRect(0,0,W,W);
+
+// everything inside the window is clipped to a circle
+g.save();g.beginPath();g.arc(cx,cy,R,0,Math.PI*2);g.clip();
+const sky=g.createLinearGradient(0,cy-R,0,cy+R);
+sky.addColorStop(0,'#3d4a66');sky.addColorStop(1,'#7e8fa6');
+g.fillStyle=sky;g.fillRect(0,0,W,W);
+
+g.fillStyle='rgba(40,48,68,.85)';
+for(const [x,y,r] of clouds){g.beginPath();g.arc(x,y,r,0,7);g.fill()}
+g.fillRect(150,200,320,40);
+
+g.strokeStyle='rgba(200,220,240,.35)';g.lineWidth=1.5;
+for(const [x,y,l] of streaks){g.beginPath();g.moveTo(x,y);g.lineTo(x-l*.3,y+l);g.stroke()}
+
+// a soft glassy shine
+const sh=g.createRadialGradient(240,230,10,300,300,R);
+sh.addColorStop(0,'rgba(255,255,255,.18)');sh.addColorStop(.4,'rgba(255,255,255,0)');
+g.fillStyle=sh;g.fillRect(0,0,W,W);
+g.restore();
+
+// wooden frame ring
+g.lineWidth=26;g.strokeStyle='#6b4a2f';
+g.beginPath();g.arc(cx,cy,R+13,0,7);g.stroke();
+g.lineWidth=3;g.strokeStyle='#3b2819';
+g.beginPath();g.arc(cx,cy,R+26,0,7);g.stroke();
+g.beginPath();g.arc(cx,cy,R,0,7);g.stroke();
+
+// cross bars
+g.lineWidth=12;g.strokeStyle='#6b4a2f';
+g.beginPath();g.moveTo(cx,cy-R);g.lineTo(cx,cy+R);g.moveTo(cx-R,cy);g.lineTo(cx+R,cy);g.stroke();
+</script></body></html>
