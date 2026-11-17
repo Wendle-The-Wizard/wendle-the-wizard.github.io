@@ -1,5 +1,5 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-src 'none'; worker-src blob:"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Round Window Rain Bell</title><style>html,body{margin:0;height:100%;background:#1b1a2e;color:#d9d4f0;font-family:Georgia,serif;text-align:center}body{display:flex;flex-direction:column;align-items:center;justify-content:center}h1{font-size:1.4rem;margin:.4rem}p{margin:.2rem .8rem .5rem;font-size:.95rem}canvas{width:min(80vw,62vh);height:min(80vw,62vh);display:block}button{margin:.5rem;padding:.5rem 1rem;font:inherit;background:#3b3560;color:#f4e9c0;border:1px solid #8a6a1f;border-radius:1rem}</style></head><body><h1>Round Window Rain Bell</h1><p>Raindrops slide down a round window and ring a humming bell whenever they reach it.</p><canvas id="c" width="600" height="600"></canvas><button id="snd">Wake the bell's hum</button><script>
-// Wendle's round window, step 4: drops that hit the bell make it hum.
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'; frame-src 'none'; worker-src blob:"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Round Window Rain Bell</title><style>html,body{margin:0;height:100%;background:#1b1a2e;color:#d9d4f0;font-family:Georgia,serif;text-align:center}body{display:flex;flex-direction:column;align-items:center;justify-content:center}h1{font-size:1.4rem;margin:.4rem}p{margin:.2rem .8rem .5rem;font-size:.95rem}canvas{width:min(80vw,55vh);height:min(80vw,55vh);display:block}button{margin:.3rem;padding:.5rem 1rem;font:inherit;background:#3b3560;color:#f4e9c0;border:1px solid #8a6a1f;border-radius:1rem}.rain{display:flex;align-items:center;gap:.6rem;margin:.2rem;font-size:.95rem}.rain input{width:min(50vw,240px);accent-color:#c9a23c}</style></head><body><h1>Round Window Rain Bell</h1><p>Raindrops slide down a round window and ring a humming bell whenever they reach it.</p><canvas id="c" width="600" height="600"></canvas><div class="rain"><label for="rate">Light</label><input id="rate" type="range" min="1" max="40" value="14" aria-label="Rain amount"><span>Heavy</span></div><button id="snd">Wake the bell's hum</button><script>
+// Wendle's round window, step 5: a slider chooses light or heavy rain.
 const c=document.getElementById('c'),g=c.getContext('2d');
 const W=600,cx=300,cy=300,R=230;
 
@@ -82,7 +82,7 @@ function hum(k){
   const now=ac.currentTime;
   if(now-lastRing<.15)return; // don't pile up too many at once
   lastRing=now;
-  const fq=notes[k%notes.length];
+  const fq=notes[Math.max(0,k)%notes.length];
   const out=ac.createGain();
   out.gain.setValueAtTime(0,now);
   out.gain.linearRampToValueAtTime(.12,now+.04);
@@ -96,6 +96,11 @@ function hum(k){
   });
 }
 
+// the rain slider: it sets how many drops are on the glass at once
+const rate=document.getElementById('rate');
+let target=+rate.value;
+rate.oninput=()=>{target=+rate.value};
+
 // raindrops: each one wobbles slowly down, leaving a thin wet trail
 const drops=[];
 function newDrop(top){
@@ -104,11 +109,19 @@ function newDrop(top){
   if(top){x=cx+(rnd()*2-1)*R*.8;y=cy-Math.sqrt(Math.max(0,R*R-(x-cx)*(x-cx)))+6}
   drops.push({x,y,r:2.5+rnd()*3,v:.3+rnd()*.7,ph:rnd()*6,trail:[]});
 }
-for(let i=0;i<14;i++)newDrop(false);
+for(let i=0;i<target;i++)newDrop(false);
+
+// when a drop leaves, I only replace it if there are fewer drops than the slider wants
+function replace(i){
+  drops.splice(i,1);
+  if(drops.length<target)newDrop(true);
+}
 
 let last=0,glow=0;
 function frame(t){
   const dt=Math.min(40,t-last||16)/16;last=t;
+  // heavier rain: add a new drop at the top now and then; lighter rain: drops just aren't replaced
+  if(drops.length<target&&rnd()<.08*dt)newDrop(true);
   g.drawImage(bg,0,0);
   g.save();g.beginPath();g.arc(cx,cy,R,0,7);g.clip();
   for(let i=drops.length-1;i>=0;i--){
@@ -129,11 +142,13 @@ function frame(t){
     // did it land on the bell? ding! the bell hums and the drop is gone
     if(Math.abs(d.x-BX)<22&&d.y>BY-42&&d.y<BY-8){
       glow=1;hum(Math.floor((d.r-2.5)/3.5*5));
-      drops.splice(i,1);newDrop(true);continue;
+      replace(i);continue;
     }
     // off the bottom of the glass? start a new one at the top
-    if(Math.hypot(d.x-cx,d.y-cy)>R-2&&d.y>cy){drops.splice(i,1);newDrop(true)}
+    if(Math.hypot(d.x-cx,d.y-cy)>R-2&&d.y>cy){replace(i)}
   }
+  // if the slider went down a lot, let extra drops quietly dry up
+  while(drops.length>target+3)drops.pop();
   g.restore();
   g.save();g.beginPath();g.arc(cx,cy,R+2,0,7);g.clip();
   g.drawImage(bell,0,0);
